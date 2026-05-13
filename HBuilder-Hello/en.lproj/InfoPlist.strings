@@ -1,0 +1,8 @@
+/* Localized versions of Info.plist keys */
+CFBundleDisplayName="HBuilder Hello";
+
+NSPhotoLibraryUsageDescription="需要同意访问您的相册选取图片才能完善该条目";
+NSPhotoLibraryAddUsageDescription="需要同意访问您的相册才能保存该图片";
+NSCameraUsageDescription="需要同意访问您的摄像头拍摄照片才能完善该条目";
+NSUserTrackingUsageDescription="开启追踪并不会获取您在其它站点的隐私信息,该行为仅用于标识设备,保障服务安全和提升浏览体验";
+                
