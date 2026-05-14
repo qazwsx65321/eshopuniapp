@@ -1,222 +1,176 @@
 #!/bin/sh
 
 # ============================================
-# Xcode Cloud 后克隆脚本
-# 用途：将仓库中的 SDK 文件链接到 Xcode Cloud 期望的位置
-# 解决：GTSDK.xcframework、资源文件、头文件的所有路径问题
+# Xcode Cloud 后克隆脚本（最终定版）
+# 用途：将仓库中的 SDK 目录完整链接到 Xcode Cloud 期望的位置
+# 解决：所有头文件、库文件、资源文件的路径问题
 # ============================================
 
-echo "===== 开始执行 ci_post_clone.sh ====="
+echo "=========================================="
+echo "开始执行 ci_post_clone.sh"
+echo "=========================================="
 echo "仓库根目录: ${CI_PRIMARY_REPOSITORY_PATH}"
 echo "当前时间: $(date)"
+echo ""
 
 # 定义路径
 REPO_PATH="${CI_PRIMARY_REPOSITORY_PATH}"
 DEST_BASE="/Volumes/workspace"
 
-# 创建基础目录
-mkdir -p "${DEST_BASE}/SDK"
+# ============================================
+# 1. 处理完整的 SDK 目录（核心解决方案）
+# ============================================
+echo "=== 步骤 1: 链接整个 SDK 目录 ==="
+
+SDK_SOURCE="${REPO_PATH}/SDK"
+SDK_DEST="${DEST_BASE}/SDK"
+
+if [ -d "${SDK_SOURCE}" ]; then
+    echo "✅ 找到源 SDK 目录: ${SDK_SOURCE}"
+    
+    # 删除已存在的目标（如果是目录或链接）
+    if [ -e "${SDK_DEST}" ]; then
+        echo "目标路径已存在，正在移除..."
+        rm -rf "${SDK_DEST}"
+    fi
+    
+    # 创建软链接
+    ln -s "${SDK_SOURCE}" "${SDK_DEST}"
+    echo "✅ 已创建链接: ${SDK_DEST} -> ${SDK_SOURCE}"
+    
+    # 验证 SDK 目录结构
+    echo ""
+    echo "SDK 目录结构验证:"
+    ls -la "${SDK_DEST}"
+else
+    echo "❌ 错误: 未找到 SDK 目录: ${SDK_SOURCE}"
+    exit 1
+fi
+
+# ============================================
+# 2. 验证关键子目录和文件
+# ============================================
+echo ""
+echo "=== 步骤 2: 验证关键文件 ==="
+
+# 定义需要检查的关键路径
+KEY_PATHS=(
+    "SDK/inc/PDRCore.h"
+    "SDK/Libs/GTSDK.xcframework"
+    "SDK/Bundles/weexUniJs.js"
+    "SDK/Bundles/uni-jsframework.js"
+    "SDK/Bundles/PandoraApi.bundle"
+    "SDK/PrivacyInfo.xcprivacy"
+)
+
+ALL_FOUND=true
+for path in "${KEY_PATHS[@]}"; do
+    full_path="${DEST_BASE}/${path}"
+    if [ -e "${full_path}" ]; then
+        echo "  ✅ ${path}"
+    else
+        echo "  ❌ ${path} - 缺失"
+        ALL_FOUND=false
+    fi
+done
+
+# 检查 UTS 目录（如果存在）
+if [ -d "${DEST_BASE}/SDK/UTS" ]; then
+    echo "  ✅ SDK/UTS 目录存在"
+    echo "     UTS 目录内容:"
+    ls -la "${DEST_BASE}/SDK/UTS" | head -5
+fi
+
+# ============================================
+# 3. 处理 HBuilder-Hello 项目资源
+# ============================================
+echo ""
+echo "=== 步骤 3: 处理项目资源文件 ==="
+
+# 创建 repository 下的目标目录
 mkdir -p "${DEST_BASE}/repository/HBuilder-Hello"
 
-# ============================================
-# 1. 处理 SDK/Libs 目录（GTSDK.xcframework）
-# ============================================
-echo ""
-echo "=== 1. 处理 SDK/Libs 目录 ==="
-
-LIBS_SOURCE="${REPO_PATH}/SDK/Libs"
-LIBS_DEST="${DEST_BASE}/SDK/Libs"
-
-if [ -d "${LIBS_SOURCE}" ]; then
-    if [ ! -L "${LIBS_DEST}" ] && [ ! -d "${LIBS_DEST}" ]; then
-        ln -s "${LIBS_SOURCE}" "${LIBS_DEST}"
-        echo "✅ 已创建链接: ${LIBS_DEST} -> ${LIBS_SOURCE}"
-    else
-        echo "✅ SDK/Libs 已存在"
-    fi
-    
-    # 验证 GTSDK.xcframework
-    if [ -d "${LIBS_DEST}/GTSDK.xcframework" ]; then
-        echo "✅ GTSDK.xcframework 可用"
-    else
-        echo "⚠️ 警告: GTSDK.xcframework 不存在"
-    fi
-else
-    echo "❌ 错误: 未找到 ${LIBS_SOURCE}"
-    exit 1
-fi
-
-# ============================================
-# 2. 处理 SDK/inc 目录（头文件，包含 PDRCore.h）
-# ============================================
-echo ""
-echo "=== 2. 处理 SDK/inc 目录 ==="
-
-INC_SOURCE="${REPO_PATH}/SDK/inc"
-INC_DEST="${DEST_BASE}/SDK/inc"
-
-if [ -d "${INC_SOURCE}" ]; then
-    if [ ! -L "${INC_DEST}" ] && [ ! -d "${INC_DEST}" ]; then
-        ln -s "${INC_SOURCE}" "${INC_DEST}"
-        echo "✅ 已创建链接: ${INC_DEST} -> ${INC_SOURCE}"
-    else
-        echo "✅ SDK/inc 已存在"
-    fi
-    
-    # 验证 PDRCore.h
-    if [ -f "${INC_DEST}/PDRCore.h" ]; then
-        echo "✅ PDRCore.h 可用"
-    else
-        echo "⚠️ 警告: PDRCore.h 不存在于 ${INC_DEST}"
-        ls -la "${INC_DEST}" | head -10
-    fi
-else
-    echo "❌ 错误: 未找到 ${INC_SOURCE}"
-    echo "查找 PDRCore.h 的实际位置..."
-    PDR_PATH=$(find "${REPO_PATH}" -name "PDRCore.h" 2>/dev/null | head -1)
-    if [ -n "$PDR_PATH" ]; then
-        echo "找到 PDRCore.h 在: ${PDR_PATH}"
-        PDR_DIR=$(dirname "${PDR_PATH}")
-        ln -s "${PDR_DIR}" "${INC_DEST}"
-        echo "✅ 已链接到: ${PDR_DIR}"
-    else
-        echo "❌ 严重错误: 未找到 PDRCore.h"
-        exit 1
-    fi
-fi
-
-# ============================================
-# 3. 处理 SDK/Bundles 目录（JS 和 Bundle 资源）
-# ============================================
-echo ""
-echo "=== 3. 处理 SDK/Bundles 目录 ==="
-
-BUNDLES_SOURCE="${REPO_PATH}/SDK/Bundles"
-BUNDLES_DEST="${DEST_BASE}/SDK/Bundles"
-
-if [ -d "${BUNDLES_SOURCE}" ]; then
-    if [ ! -L "${BUNDLES_DEST}" ] && [ ! -d "${BUNDLES_DEST}" ]; then
-        ln -s "${BUNDLES_SOURCE}" "${BUNDLES_DEST}"
-        echo "✅ 已创建链接: ${BUNDLES_DEST} -> ${BUNDLES_SOURCE}"
-    else
-        echo "✅ SDK/Bundles 已存在"
-    fi
-    
-    # 验证关键文件
-    echo "验证关键资源文件:"
-    for file in weexUniJs.js weex-polyfill.js uni-jsframework.js uni-jsframework-vue3.js __uniappes6.js unincomponents.ttf; do
-        if [ -f "${BUNDLES_DEST}/${file}" ]; then
-            echo "  ✅ ${file}"
-        else
-            echo "  ⚠️ ${file} 缺失"
-        fi
-    done
-    
-    # 验证 Bundle 目录
-    for bundle in PandoraApi.bundle DCTZImagePickerController.bundle DCSVProgressHUD.bundle; do
-        if [ -d "${BUNDLES_DEST}/${bundle}" ]; then
-            echo "  ✅ ${bundle}"
-        else
-            echo "  ⚠️ ${bundle} 缺失"
-        fi
-    done
-else
-    echo "❌ 错误: 未找到 ${BUNDLES_SOURCE}"
-    exit 1
-fi
-
-# ============================================
-# 4. 处理 SDK/PrivacyInfo.xcprivacy
-# ============================================
-echo ""
-echo "=== 4. 处理 SDK/PrivacyInfo.xcprivacy ==="
-
-PRIVACY_SOURCE="${REPO_PATH}/SDK/PrivacyInfo.xcprivacy"
-PRIVACY_DEST="${DEST_BASE}/SDK/PrivacyInfo.xcprivacy"
-
-if [ -f "${PRIVACY_SOURCE}" ]; then
-    if [ ! -L "${PRIVACY_DEST}" ] && [ ! -f "${PRIVACY_DEST}" ]; then
-        ln -s "${PRIVACY_SOURCE}" "${PRIVACY_DEST}"
-        echo "✅ 已创建链接: ${PRIVACY_DEST} -> ${PRIVACY_SOURCE}"
-    else
-        echo "✅ PrivacyInfo.xcprivacy 已存在"
-    fi
-else
-    echo "⚠️ 警告: 未找到 PrivacyInfo.xcprivacy"
-fi
-
-# ============================================
-# 5. 处理 HBuilder-Hello/control.xml
-# ============================================
-echo ""
-echo "=== 5. 处理 control.xml ==="
-
+# 处理 control.xml
 CONTROL_SOURCE="${REPO_PATH}/HBuilder-Hello/control.xml"
 CONTROL_DEST="${DEST_BASE}/repository/HBuilder-Hello/control.xml"
 
 if [ -f "${CONTROL_SOURCE}" ]; then
-    if [ ! -L "${CONTROL_DEST}" ] && [ ! -f "${CONTROL_DEST}" ]; then
-        ln -s "${CONTROL_SOURCE}" "${CONTROL_DEST}"
-        echo "✅ 已创建链接: ${CONTROL_DEST} -> ${CONTROL_SOURCE}"
-    else
-        echo "✅ control.xml 已存在"
+    if [ -e "${CONTROL_DEST}" ]; then
+        rm -f "${CONTROL_DEST}"
     fi
+    ln -s "${CONTROL_SOURCE}" "${CONTROL_DEST}"
+    echo "✅ control.xml 链接成功"
 else
-    echo "⚠️ 警告: 未找到 control.xml"
+    echo "⚠️ control.xml 不存在（可选文件）"
 fi
 
-# ============================================
-# 6. 处理 HBuilder-Hello/Pandora 目录
-# ============================================
-echo ""
-echo "=== 6. 处理 Pandora 目录 ==="
-
+# 处理 Pandora 目录
 PANDORA_SOURCE="${REPO_PATH}/HBuilder-Hello/Pandora"
 PANDORA_DEST="${DEST_BASE}/repository/HBuilder-Hello/Pandora"
 
 if [ -d "${PANDORA_SOURCE}" ]; then
-    if [ ! -L "${PANDORA_DEST}" ] && [ ! -d "${PANDORA_DEST}" ]; then
-        ln -s "${PANDORA_SOURCE}" "${PANDORA_DEST}"
-        echo "✅ 已创建链接: ${PANDORA_DEST} -> ${PANDORA_SOURCE}"
-    else
-        echo "✅ Pandora 目录已存在"
+    if [ -e "${PANDORA_DEST}" ]; then
+        rm -rf "${PANDORA_DEST}"
     fi
-    echo "✅ Pandora 目录可用"
+    ln -s "${PANDORA_SOURCE}" "${PANDORA_DEST}"
+    echo "✅ Pandora 目录链接成功"
 else
-    echo "⚠️ 警告: 未找到 Pandora 目录（可能不影响构建）"
+    echo "⚠️ Pandora 目录不存在（可选文件）"
 fi
 
 # ============================================
-# 最终验证
+# 4. 处理 HBuilder 源代码目录中的头文件搜索路径
 # ============================================
 echo ""
-echo "=== 最终验证 ==="
-echo "所有关键路径检查:"
+echo "=== 步骤 4: 创建额外的头文件链接 ==="
 
-VERIFY_PATHS=(
-    "/Volumes/workspace/SDK/Libs/GTSDK.xcframework"
+# 有些项目可能会在 HBuilder 目录中查找头文件
+HBUILDER_INC_SOURCE="${REPO_PATH}/HBuilder/inc"
+HBUILDER_INC_DEST="${DEST_BASE}/HBuilder/inc"
+
+if [ -d "${HBUILDER_INC_SOURCE}" ]; then
+    if [ ! -L "${HBUILDER_INC_DEST}" ] && [ ! -d "${HBUILDER_INC_DEST}" ]; then
+        mkdir -p "${DEST_BASE}/HBuilder"
+        ln -s "${HBUILDER_INC_SOURCE}" "${HBUILDER_INC_DEST}"
+        echo "✅ HBuilder/inc 链接成功"
+    fi
+fi
+
+# ============================================
+# 最终验证和总结
+# ============================================
+echo ""
+echo "=========================================="
+echo "最终验证结果"
+echo "=========================================="
+
+# 检查最关键的几个路径
+CRITICAL_PATHS=(
     "/Volumes/workspace/SDK/inc/PDRCore.h"
+    "/Volumes/workspace/SDK/Libs/GTSDK.xcframework"
     "/Volumes/workspace/SDK/Bundles/weexUniJs.js"
-    "/Volumes/workspace/SDK/Bundles/uni-jsframework.js"
-    "/Volumes/workspace/SDK/Bundles/PandoraApi.bundle"
 )
 
-ALL_OK=true
-for path in "${VERIFY_PATHS[@]}"; do
-    if [ -e "$path" ]; then
-        echo "  ✅ $path"
+MISSING_COUNT=0
+for path in "${CRITICAL_PATHS[@]}"; do
+    if [ -e "${path}" ]; then
+        echo "✅ ${path}"
     else
-        echo "  ❌ $path - 缺失"
-        ALL_OK=false
+        echo "❌ ${path}"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     fi
 done
 
 echo ""
-if [ "$ALL_OK" = true ]; then
-    echo "🎉 所有关键文件都已就绪，构建应该可以成功！"
+if [ $MISSING_COUNT -eq 0 ]; then
+    echo "🎉 所有关键文件都已就绪！"
+    echo "🎉 Xcode Cloud 构建应该可以成功完成！"
 else
-    echo "⚠️ 部分文件缺失，请检查上面的错误信息"
+    echo "⚠️ 仍有 ${MISSING_COUNT} 个关键文件缺失"
+    echo "请检查 Git 仓库中的 SDK 目录结构"
 fi
 
 echo ""
-echo "===== ci_post_clone.sh 执行完成 ====="
+echo "=========================================="
+echo "ci_post_clone.sh 执行完成"
+echo "=========================================="
