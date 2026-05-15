@@ -30,7 +30,6 @@
 		24AFD8681CB50C4000C0F062 /* liblibXHR.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24AFD82B1CB50C4000C0F062 /* liblibXHR.a */; };
 		24AFD8691CB50C4000C0F062 /* liblibZip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24AFD82C1CB50C4000C0F062 /* liblibZip.a */; };
 		24AFD86B1CB50C4000C0F062 /* libopencore-amrnb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24AFD82E1CB50C4000C0F062 /* libopencore-amrnb.a */; };
-		24AFD8761CB50C4000C0F062 /* libTouchJSON.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24AFD8391CB50C4000C0F062 /* libTouchJSON.a */; };
 		24BD5AE81C99491D00B05AA2 /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 24BD5AE71C99491D00B05AA2 /* libsqlite3.0.tbd */; };
 		24BD5AEA1C99492A00B05AA2 /* libiconv.2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 24BD5AE91C99492A00B05AA2 /* libiconv.2.tbd */; };
 		24BD5AEE1C99494200B05AA2 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 24BD5AED1C99494200B05AA2 /* libxml2.tbd */; };
@@ -73,11 +72,12 @@
 		67A9340023A8B922004A4DF4 /* libSDWebImage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24AFD8341CB50C4000C0F062 /* libSDWebImage.a */; };
 		67B7CAA221DCE8180083E96A /* control.xml in Resources */ = {isa = PBXBuildFile; fileRef = 67B7CAA121DCE8180083E96A /* control.xml */; };
 		67E9CDCF22968D2E0076E0FB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 67E9CDCD22968D2E0076E0FB /* Localizable.strings */; };
-		7A1967C3212536EC00B330A9 /* libmp3lame.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1967C2212536EC00B330A9 /* libmp3lame.a */; };
 		7A49810B2126B01200D20880 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A49810A2126B01200D20880 /* libiconv.tbd */; };
 		7A49810D2126B01900D20880 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A49810C2126B01900D20880 /* Accelerate.framework */; };
 		7ACF69AB19FF899A007C64F1 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7ACF69AA19FF899A007C64F1 /* CFNetwork.framework */; };
 		7ACF69AD19FF89B1007C64F1 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7ACF69AC19FF89B1007C64F1 /* Security.framework */; };
+		810A16392FB5A2DD00C29D9B /* libmp3lame.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1967C2212536EC00B330A9 /* libmp3lame.a */; };
+		810A163A2FB5A56200C29D9B /* libTouchJSON.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24AFD8391CB50C4000C0F062 /* libTouchJSON.a */; };
 		8E163D021A8D208500308A8B /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E163D011A8D208500308A8B /* AssetsLibrary.framework */; };
 		8E6E37AC1B0E1B580036EB48 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E6E37AB1B0E1B580036EB48 /* ImageIO.framework */; };
 		8EED629C198A1D13000A4449 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EED629B198A1D13000A4449 /* Foundation.framework */; };
@@ -429,6 +429,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				810A163A2FB5A56200C29D9B /* libTouchJSON.a in Frameworks */,
+				810A16392FB5A2DD00C29D9B /* libmp3lame.a in Frameworks */,
 				2F4864C4293E11CC00142360 /* DCUniRecord.framework in Frameworks */,
 				4FE36666254FE3D100DCD173 /* libuchardet.a in Frameworks */,
 				4F8546B12518D8BF00858D80 /* storage.framework in Frameworks */,
@@ -454,9 +456,7 @@
 				24AFD8641CB50C4000C0F062 /* liblibStorage.a in Frameworks */,
 				24AFD8681CB50C4000C0F062 /* liblibXHR.a in Frameworks */,
 				24AFD8691CB50C4000C0F062 /* liblibZip.a in Frameworks */,
-				7A1967C3212536EC00B330A9 /* libmp3lame.a in Frameworks */,
 				24AFD86B1CB50C4000C0F062 /* libopencore-amrnb.a in Frameworks */,
-				24AFD8761CB50C4000C0F062 /* libTouchJSON.a in Frameworks */,
 				7A49810B2126B01200D20880 /* libiconv.tbd in Frameworks */,
 				6731F394232F4CE2007838BC /* libresolv.tbd in Frameworks */,
 				2F5FAE662865DB5700430AFA /* KSCrash.framework in Frameworks */,
@@ -1205,8 +1205,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_ENTITLEMENTS = HBuilder/HBuilder.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20501;
 				DEVELOPMENT_TEAM = 6F5GE4FLWY;

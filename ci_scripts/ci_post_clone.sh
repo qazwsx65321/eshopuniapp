@@ -26,7 +26,7 @@ if [ -d "${SDK_SOURCE}" ]; then
     if [ -e "${SDK_DEST}" ]; then
         rm -rf "${SDK_DEST}"
     fi
-    ln -s "${SDK_SOURCE}" "${SDK_DEST}"
+    cp -R "${SDK_SOURCE}" "${SDK_DEST}"
     echo "✅ SDK 目录链接成功: ${SDK_DEST} -> ${SDK_SOURCE}"
     
     # 验证链接
@@ -236,12 +236,12 @@ echo "=== 步骤 5: 处理项目资源 ==="
 mkdir -p "${DEST_BASE}/repository/HBuilder-Hello"
 
 if [ -f "${REPO_PATH}/HBuilder-Hello/control.xml" ]; then
-    ln -sf "${REPO_PATH}/HBuilder-Hello/control.xml" "${DEST_BASE}/repository/HBuilder-Hello/control.xml"
+    cp -f "${REPO_PATH}/HBuilder-Hello/control.xml" "${DEST_BASE}/repository/HBuilder-Hello/control.xml"
     echo "✅ control.xml 链接成功"
 fi
 
 if [ -d "${REPO_PATH}/HBuilder-Hello/Pandora" ]; then
-    ln -sf "${REPO_PATH}/HBuilder-Hello/Pandora" "${DEST_BASE}/repository/HBuilder-Hello/Pandora"
+    cp -Rf "${REPO_PATH}/HBuilder-Hello/Pandora" "${DEST_BASE}/repository/HBuilder-Hello/Pandora"
     echo "✅ Pandora 目录链接成功"
 fi
 
